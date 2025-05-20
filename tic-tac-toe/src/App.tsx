@@ -13,9 +13,9 @@ const Board: FC<{ xIsNext: boolean, squares: SquareValue[], onPlay: (nextSquares
   const handleClick = (i: number) => {
     if (squares[i].value || calculateWinner(squares)) return;
 
-  // squares.slice()だと、シャローコピーになるので、想定した動作にならない
-  const nextSquares = squares.map(sq => ({ ...sq }));
-  nextSquares[i].value = xIsNext ? "X" : "O";
+    // squares.slice()だと、シャローコピーになるので、想定した動作にならない
+    const nextSquares = squares.map(sq => ({ ...sq }));
+    nextSquares[i].value = xIsNext ? "X" : "O";
 
     onPlay(nextSquares);
   }
@@ -33,7 +33,7 @@ const Board: FC<{ xIsNext: boolean, squares: SquareValue[], onPlay: (nextSquares
     ]
     for (const line of lines) {
       const [a, b, c] = line;
-      if (squares[a] && 
+      if (squares[a] &&
         squares[a].value === squares[b].value &&
         squares[a].value === squares[c].value) {
         return squares[a].value;
@@ -50,24 +50,30 @@ const Board: FC<{ xIsNext: boolean, squares: SquareValue[], onPlay: (nextSquares
     status = "Next player: " + (xIsNext ? "X" : "O");
   }
 
+  const boardSize = 3;
+  const rows: SquareValue[][] = [];
+  for (let i = 0; i < squares.length; i += boardSize) {
+    rows.push(squares.slice(i, i + boardSize));
+  }
+
   return (
     <>
       <div className='status'>{status}</div>
-      <div className="board-row">
-        <Square square={squares[0]} onSquareClick={() => handleClick(0)} />
-        <Square square={squares[1]} onSquareClick={() => handleClick(1)} />
-        <Square square={squares[2]} onSquareClick={() => handleClick(2)} />
-      </div>
-      <div className="board-row">
-        <Square square={squares[3]} onSquareClick={() => handleClick(3)} />
-        <Square square={squares[4]} onSquareClick={() => handleClick(4)} />
-        <Square square={squares[5]} onSquareClick={() => handleClick(5)} />
-      </div>
-      <div className="board-row">
-        <Square square={squares[6]} onSquareClick={() => handleClick(6)} />
-        <Square square={squares[7]} onSquareClick={() => handleClick(7)} />
-        <Square square={squares[8]} onSquareClick={() => handleClick(8)} />
-      </div>
+      {rows.map((rowItems, rowIndex) => (
+        <div className="board-row" key={rowIndex}>
+          {rowItems.map((squareData, colIndex) => {
+            // 元の1次元配列におけるインデックスを計算
+            const squareIndex = rowIndex * boardSize + colIndex;
+            return (
+              <Square
+                key={squareIndex}
+                square={squareData}
+                onSquareClick={() => handleClick(squareIndex)}
+              />
+            );
+          })}
+        </div>
+      ))}
     </>
   );
 }
@@ -101,7 +107,12 @@ const Game: FC<{}> = () => {
     }
     return (
       <li key={move}>
-        <button onClick={() => jumpTo(move)}>{description}</button>
+        {move !== currentMove ? 
+        (
+          <button onClick={() => jumpTo(move)}>{description}</button>
+        ) : (
+          <span>{`You are at move #${currentMove}`}</span>
+        )}
       </li>
     )
   });
